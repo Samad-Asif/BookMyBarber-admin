@@ -1,8 +1,9 @@
 import axios, { AxiosError } from "axios";
 import type { InternalAxiosRequestConfig } from "axios";
+import { applyNgrokHeaders, getApiBaseUrl } from "./api-config";
 import { logger } from "./logger";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:5000/v1";
+const API_BASE_URL = getApiBaseUrl();
 
 export const TOKEN_STORAGE_KEY = "bmb_access_token";
 export const REFRESH_TOKEN_STORAGE_KEY = "bmb_refresh_token";
@@ -45,9 +46,11 @@ async function refreshAccessToken(): Promise<string | null> {
   const refresh = localStorage.getItem(REFRESH_TOKEN_STORAGE_KEY);
   if (!refresh?.trim()) return null;
 
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  applyNgrokHeaders(headers, API_BASE_URL);
   const { data } = await axios.post<{
     session: { access_token: string; refresh_token: string };
-  }>(`${API_BASE_URL}/auth/refresh`, { refresh_token: refresh });
+  }>(`${API_BASE_URL}/auth/refresh`, { refresh_token: refresh }, { headers });
 
   setSessionTokens(data.session.access_token, data.session.refresh_token);
   return data.session.access_token;
@@ -69,6 +72,10 @@ api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+
+  const headers = config.headers as Record<string, string>;
+  applyNgrokHeaders(headers, API_BASE_URL);
+  config.headers = headers;
 
   const method = config.method ?? "get";
   const url = `${config.baseURL ?? ""}${config.url ?? ""}`;
