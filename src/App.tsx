@@ -23,6 +23,7 @@ import type { AuthUser } from "./lib/auth";
 import { api, tryRestoreSession } from "./lib/api";
 import { getApiBaseUrl } from "./lib/api-config";
 import { formatApiError } from "./lib/network-error";
+import { formatTime12h } from "./lib/time-format";
 import { CHART } from "./constants/design-tokens";
 import {
   fetchAdminBookings,
@@ -582,7 +583,7 @@ export default function App() {
                             {b.booking_date}
                           </div>
                         </td>
-                        <td className="py-4 text-foreground/80">{b.start_time}</td>
+                        <td className="py-4 text-foreground/80">{formatTime12h(String(b.start_time))}</td>
                         <td className="py-4 font-semibold text-foreground">PKR {b.price_pkr}</td>
                         <td className="py-4">
                           <span
@@ -774,7 +775,7 @@ export default function App() {
                   {adminBookings.map((b) => (
                     <tr key={b.id} className="border-b border-border/60 font-body">
                       <td className="py-3 text-foreground">
-                        {b.booking_date} {String(b.start_time).slice(0, 5)}
+                        {b.booking_date} {formatTime12h(String(b.start_time))}
                       </td>
                       <td className="py-3 text-muted-foreground">
                         {b.barber_shops?.name ?? "—"}
