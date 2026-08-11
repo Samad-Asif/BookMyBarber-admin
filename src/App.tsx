@@ -91,6 +91,13 @@ interface Feedback {
   };
 }
 
+interface GraphDataPoint {
+  month: string;
+  revenue: number;
+  commission: number;
+  bookings: number;
+}
+
 export default function App() {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [email, setEmail] = useState("");
@@ -104,7 +111,7 @@ export default function App() {
   const [feedbackStatusFilter, setFeedbackStatusFilter] = useState<"all" | "open" | "resolved">("all");
   const [stats, setStats] = useState<Stats | null>(null);
   const [recentBookings, setRecentBookings] = useState<RecentBooking[]>([]);
-  const [graphData, setGraphData] = useState<any[]>([]);
+  const [graphData, setGraphData] = useState<GraphDataPoint[]>([]);
   const [shops, setShops] = useState<Shop[]>([]);
   const [shopsLoadError, setShopsLoadError] = useState<string | null>(null);
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
@@ -166,12 +173,12 @@ export default function App() {
     }
   };
 
-  const handleLogout = async () => {
+  async function handleLogout() {
     await logout();
     setUser(null);
-  };
+  }
 
-  const fetchDashboardStats = async () => {
+  async function fetchDashboardStats() {
     try {
       const { data } = await api.get("/admin/dashboard/stats");
       setStats(data.stats);
@@ -180,9 +187,9 @@ export default function App() {
     } catch (err) {
       console.error("Failed to load dashboard statistics", err);
     }
-  };
+  }
 
-  const fetchShops = async () => {
+  async function fetchShops() {
     setShopsLoadError(null);
     try {
       const { data } = await api.get("/admin/shops");
@@ -193,18 +200,18 @@ export default function App() {
       setShops([]);
       console.error("Failed to fetch barber shops", err);
     }
-  };
+  }
 
-  const fetchFeedbacks = async () => {
+  async function fetchFeedbacks() {
     try {
       const { data } = await api.get("/admin/feedbacks");
       setFeedbacks(data.feedbacks);
     } catch (err) {
       console.error("Failed to fetch feedbacks", err);
     }
-  };
+  }
 
-  const fetchBookingsList = async () => {
+  async function fetchBookingsList() {
     setBookingsLoadError(null);
     try {
       const rows = await fetchAdminBookings({
@@ -218,14 +225,14 @@ export default function App() {
       setAdminBookings([]);
       console.error("Failed to load admin bookings", err);
     }
-  };
+  }
 
   const handleApproveShop = async (shopId: string) => {
     try {
       await api.post(`/admin/shops/${shopId}/approve`);
       fetchShops();
       fetchDashboardStats();
-    } catch (err) {
+    } catch {
       alert("Failed to approve shop");
     }
   };
@@ -236,7 +243,7 @@ export default function App() {
       await api.post(`/admin/shops/${shopId}/reject`, { rejectionReason });
       fetchShops();
       fetchDashboardStats();
-    } catch (err) {
+    } catch {
       alert("Failed to reject shop");
     }
   };
@@ -264,7 +271,7 @@ export default function App() {
       setSelectedFeedback(null);
       setResolutionNotes("");
       fetchFeedbacks();
-    } catch (err) {
+    } catch {
       alert("Failed to resolve feedback complaint");
     }
   };

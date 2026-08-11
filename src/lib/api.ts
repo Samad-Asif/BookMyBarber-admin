@@ -75,7 +75,6 @@ api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
 
   const headers = config.headers as Record<string, string>;
   applyNgrokHeaders(headers, API_BASE_URL);
-  config.headers = headers;
 
   const method = config.method ?? "get";
   const url = `${config.baseURL ?? ""}${config.url ?? ""}`;
