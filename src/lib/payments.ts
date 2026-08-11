@@ -29,8 +29,7 @@ export interface PaymentStatusResponse {
 
 /** Create SafePay hosted checkout via backend (PKR). */
 export async function createCheckout(params: {
-  amountPkr: number;
-  bookingId?: string;
+  bookingId: string;
   source?: "hosted" | "mobile";
 }): Promise<CheckoutResponse> {
   const { data } = await api.post<CheckoutResponse>("/payments/checkout", params);
