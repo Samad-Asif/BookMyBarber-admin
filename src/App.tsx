@@ -11,6 +11,7 @@ import {
   UserCog,
   Award,
   Mail,
+  Trash2,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -36,6 +37,8 @@ import {
 import BarbersPanel from "./components/BarbersPanel";
 import LoyaltyPanel from "./components/LoyaltyPanel";
 import EmailPanel from "./components/EmailPanel";
+import DeleteShopDialog from "./components/DeleteShopDialog";
+import type { ShopDeletionSummary } from "./lib/shops";
 
 type Tab = "overview" | "shops" | "barbers" | "bookings" | "loyalty" | "feedbacks" | "email";
 
@@ -124,6 +127,8 @@ export default function App() {
   const [adminBookings, setAdminBookings] = useState<AdminBookingRow[]>([]);
   const [bookingsLoadError, setBookingsLoadError] = useState<string | null>(null);
   const [bookingStatusFilter, setBookingStatusFilter] = useState<"all" | BookingStatus>("all");
+  const [shopToDelete, setShopToDelete] = useState<Shop | null>(null);
+  const [deletedShopNotice, setDeletedShopNotice] = useState<string | null>(null);
 
   // Resolution states
   const [selectedFeedback, setSelectedFeedback] = useState<Feedback | null>(null);
@@ -252,6 +257,17 @@ export default function App() {
     } catch {
       alert("Failed to reject shop");
     }
+  };
+
+  const handleShopDeleted = (summary: ShopDeletionSummary) => {
+    setShopToDelete(null);
+    setShops((prev) => prev.filter((s) => s.id !== summary.shop.id));
+    setDeletedShopNotice(
+      `Deleted ${summary.shop.name} — ${summary.bookings} booking${summary.bookings === 1 ? "" : "s"}, ${summary.workers} team member${summary.workers === 1 ? "" : "s"} and ${summary.services} service${summary.services === 1 ? "" : "s"} removed.`
+    );
+    fetchShops();
+    fetchDashboardStats();
+    void fetchBookingsList();
   };
 
   const filteredShops =
@@ -663,6 +679,17 @@ export default function App() {
                 </button>
               </div>
             )}
+            {deletedShopNotice && (
+              <div className="mb-4 rounded-xl border border-chart-2/30 bg-chart-2/10 p-4 text-sm font-body flex items-start justify-between gap-3">
+                <p className="text-foreground">{deletedShopNotice}</p>
+                <button
+                  onClick={() => setDeletedShopNotice(null)}
+                  className="text-muted-foreground hover:text-foreground text-xs font-semibold cursor-pointer"
+                >
+                  Dismiss
+                </button>
+              </div>
+            )}
             <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
               <h4 className="font-heading font-bold text-foreground text-lg">Shop verification</h4>
               <div className="flex gap-2">
@@ -733,12 +760,21 @@ export default function App() {
                         <span className="text-xs uppercase font-bold text-chart-4 font-body">{shop.status}</span>
                       </td>
                       <td className="py-3">
-                        {shop.status === "pending" && (
-                          <div className="flex gap-2">
-                            <button onClick={() => handleApproveShop(shop.id)} className="text-chart-2 text-xs font-semibold cursor-pointer font-body">Approve</button>
-                            <button onClick={() => handleRejectShop(shop.id)} className="text-destructive text-xs font-semibold cursor-pointer font-body">Reject</button>
-                          </div>
-                        )}
+                        <div className="flex flex-wrap gap-x-3 gap-y-1">
+                          {shop.status === "pending" && (
+                            <>
+                              <button onClick={() => handleApproveShop(shop.id)} className="text-chart-2 text-xs font-semibold cursor-pointer font-body">Approve</button>
+                              <button onClick={() => handleRejectShop(shop.id)} className="text-destructive text-xs font-semibold cursor-pointer font-body">Reject</button>
+                            </>
+                          )}
+                          <button
+                            onClick={() => setShopToDelete(shop)}
+                            className="inline-flex items-center gap-1 text-destructive text-xs font-semibold cursor-pointer font-body hover:underline"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            Delete
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -910,6 +946,14 @@ export default function App() {
           </div>
         )}
       </main>
+
+      {shopToDelete && (
+        <DeleteShopDialog
+          shop={shopToDelete}
+          onCancel={() => setShopToDelete(null)}
+          onDeleted={handleShopDeleted}
+        />
+      )}
 
       {/* Resolve Feedback Dialog */}
       {selectedFeedback && (
