@@ -8,6 +8,9 @@ import {
   LogOut,
   Calendar,
   ShieldCheck,
+  UserCog,
+  Award,
+  Mail,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -30,8 +33,11 @@ import {
   type AdminBookingRow,
   type BookingStatus,
 } from "./lib/bookings";
+import BarbersPanel from "./components/BarbersPanel";
+import LoyaltyPanel from "./components/LoyaltyPanel";
+import EmailPanel from "./components/EmailPanel";
 
-type Tab = "overview" | "shops" | "bookings" | "feedbacks";
+type Tab = "overview" | "shops" | "barbers" | "bookings" | "loyalty" | "feedbacks" | "email";
 
 interface Stats {
   customers: number;
@@ -382,14 +388,29 @@ export default function App() {
               Barber Shops ({shops.filter((s) => s.status === "pending").length} pending)
             </button>
 
+            <button onClick={() => setActiveTab("barbers")} className={navClass("barbers")}>
+              <UserCog className="w-5 h-5" />
+              Barbers
+            </button>
+
             <button onClick={() => setActiveTab("bookings")} className={navClass("bookings")}>
               <Calendar className="w-5 h-5" />
               Bookings
             </button>
 
+            <button onClick={() => setActiveTab("loyalty")} className={navClass("loyalty")}>
+              <Award className="w-5 h-5" />
+              Loyalty rewards
+            </button>
+
             <button onClick={() => setActiveTab("feedbacks")} className={navClass("feedbacks")}>
               <HelpCircle className="w-5 h-5" />
               Feedback complaints
+            </button>
+
+            <button onClick={() => setActiveTab("email")} className={navClass("email")}>
+              <Mail className="w-5 h-5" />
+              Email delivery
             </button>
           </nav>
         </div>
@@ -733,6 +754,23 @@ export default function App() {
             </div>
           </div>
         )}
+
+        {/* Tab: Barbers (permanent delete) */}
+        {activeTab === "barbers" && (
+          <BarbersPanel
+            onBarberDeleted={() => {
+              fetchDashboardStats();
+              fetchShops();
+              void fetchBookingsList();
+            }}
+          />
+        )}
+
+        {/* Tab: Loyalty rewards */}
+        {activeTab === "loyalty" && <LoyaltyPanel />}
+
+        {/* Tab: Email delivery diagnostics */}
+        {activeTab === "email" && <EmailPanel />}
 
         {/* Tab: Bookings */}
         {activeTab === "bookings" && (
